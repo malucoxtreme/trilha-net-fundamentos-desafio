@@ -1,67 +1,75 @@
-namespace DesafioFundamentos.Models
+using Spectre.Console;
+
+namespace DesafioFundamentos.Models;
+/// <summary>
+/// Classe Controlador Estacionamento
+/// </summary>
+public class Estacionamento(decimal precoInicial, decimal precoPorHora)
 {
-    public class Estacionamento
+    private readonly decimal precoInicial = precoInicial;
+    private readonly decimal precoPorHora = precoPorHora;
+    private List<Veiculo> veiculos = [];
+
+    /// <summary>
+    /// Adicionar um veiculo a lista
+    /// </summary>
+    /// <param name="placa"></param>
+    public void AdicionarVeiculo(string placa)
     {
-        private decimal precoInicial = 0;
-        private decimal precoPorHora = 0;
-        private List<string> veiculos = new List<string>();
-
-        public Estacionamento(decimal precoInicial, decimal precoPorHora)
+        if (placa is not null)
         {
-            this.precoInicial = precoInicial;
-            this.precoPorHora = precoPorHora;
+            veiculos.Add(new Veiculo
+            {
+                Placa = placa,
+            });
         }
 
-        public void AdicionarVeiculo()
+    }
+    
+    /// <summary>
+    /// Método para Remover Veiculo
+    /// </summary>
+    public void RemoverVeiculo()
+    {
+        // Pedir para o usuário digitar a placa e armazenar na variável placa
+        string placa = AnsiConsole.Ask<string>("Digite a placa do veículo para remover"); ;
+
+        Veiculo veiculo = veiculos.Where(x => x.Placa == placa).FirstOrDefault();
+        // Verifica se o veículo existe
+        if (veiculo is not null)
         {
-            // TODO: Pedir para o usuário digitar uma placa (ReadLine) e adicionar na lista "veiculos"
-            // *IMPLEMENTE AQUI*
-            Console.WriteLine("Digite a placa do veículo para estacionar:");
+            DateTime horaAtual = DateTime.Now;
+            TimeSpan tempoEstacionado = horaAtual - veiculo.Tempo;
+            
+            decimal valorTotal = precoInicial + (tempoEstacionado.Hours * precoPorHora);
+
+            veiculos.Remove(veiculo);
+
+            AnsiConsole.MarkupLine($"O veículo {placa} foi removido e o preço total foi de: R$ {valorTotal}");
         }
-
-        public void RemoverVeiculo()
+        else
         {
-            Console.WriteLine("Digite a placa do veículo para remover:");
-
-            // Pedir para o usuário digitar a placa e armazenar na variável placa
-            // *IMPLEMENTE AQUI*
-            string placa = "";
-
-            // Verifica se o veículo existe
-            if (veiculos.Any(x => x.ToUpper() == placa.ToUpper()))
+            AnsiConsole.MarkupLine("Desculpe, esse veículo não está estacionado aqui.\nConfira se digitou a placa corretamente");
+        }
+    }
+    /// <summary>
+    /// Metódo para listar veiculos
+    /// </summary>
+    public void ListarVeiculos()
+    {
+        // Verifica se há veículos no estacionamento
+        if (veiculos.Count is not 0)
+        {
+            AnsiConsole.MarkupLine("\nOs veículos estacionados são:");
+            foreach (var veiculo in veiculos)
             {
-                Console.WriteLine("Digite a quantidade de horas que o veículo permaneceu estacionado:");
-
-                // TODO: Pedir para o usuário digitar a quantidade de horas que o veículo permaneceu estacionado,
-                // TODO: Realizar o seguinte cálculo: "precoInicial + precoPorHora * horas" para a variável valorTotal                
-                // *IMPLEMENTE AQUI*
-                int horas = 0;
-                decimal valorTotal = 0; 
-
-                // TODO: Remover a placa digitada da lista de veículos
-                // *IMPLEMENTE AQUI*
-
-                Console.WriteLine($"O veículo {placa} foi removido e o preço total foi de: R$ {valorTotal}");
-            }
-            else
-            {
-                Console.WriteLine("Desculpe, esse veículo não está estacionado aqui. Confira se digitou a placa corretamente");
+                AnsiConsole.MarkupLine($"Veiculo placa nº {veiculo.Placa}, Hora de entrada {veiculo.Tempo:HH:mm:ss}");
             }
         }
-
-        public void ListarVeiculos()
+        else
         {
-            // Verifica se há veículos no estacionamento
-            if (veiculos.Any())
-            {
-                Console.WriteLine("Os veículos estacionados são:");
-                // TODO: Realizar um laço de repetição, exibindo os veículos estacionados
-                // *IMPLEMENTE AQUI*
-            }
-            else
-            {
-                Console.WriteLine("Não há veículos estacionados.");
-            }
+            Console.WriteLine("Não há veículos estacionados.");
         }
     }
 }
+

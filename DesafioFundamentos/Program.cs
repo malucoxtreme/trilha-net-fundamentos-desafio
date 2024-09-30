@@ -1,59 +1,96 @@
 ﻿using DesafioFundamentos.Models;
+using Spectre.Console;
 
-// Coloca o encoding para UTF8 para exibir acentuação
-Console.OutputEncoding = System.Text.Encoding.UTF8;
-
-decimal precoInicial = 0;
-decimal precoPorHora = 0;
-
-Console.WriteLine("Seja bem vindo ao sistema de estacionamento!\n" +
-                  "Digite o preço inicial:");
-precoInicial = Convert.ToDecimal(Console.ReadLine());
-
-Console.WriteLine("Agora digite o preço por hora:");
-precoPorHora = Convert.ToDecimal(Console.ReadLine());
-
-// Instancia a classe Estacionamento, já com os valores obtidos anteriormente
-Estacionamento es = new Estacionamento(precoInicial, precoPorHora);
-
-string opcao = string.Empty;
-bool exibirMenu = true;
-
-// Realiza o loop do menu
-while (exibirMenu)
+namespace DesafioFundamentos;
+internal class Program
 {
-    Console.Clear();
-    Console.WriteLine("Digite a sua opção:");
-    Console.WriteLine("1 - Cadastrar veículo");
-    Console.WriteLine("2 - Remover veículo");
-    Console.WriteLine("3 - Listar veículos");
-    Console.WriteLine("4 - Encerrar");
-
-    switch (Console.ReadLine())
+    private static bool exibirRelogio = true;
+    private static void Main()
     {
-        case "1":
-            es.AdicionarVeiculo();
-            break;
+        // Configura o encoding para UTF8 para exibir acentuação
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
 
-        case "2":
-            es.RemoverVeiculo();
-            break;
+        bool exibirMenu = true;
 
-        case "3":
-            es.ListarVeiculos();
-            break;
+        decimal precoInicial = AnsiConsole.Ask<decimal>($"[green]Valor inicial: [/]");
 
-        case "4":
+        decimal precoPorHora = AnsiConsole.Ask<decimal>("[green]Valor Por Hora: [/]");
+
+        AnsiConsole.MarkupLine("\nPressione qualquer tecla para continuar...");
+        Console.ReadKey();
+        AnsiConsole.Clear();
+
+        // iniciar a thread e a deixa em segundo plano
+        Thread timeThread = new(ShowTime) { IsBackground = true };
+        timeThread.Start();
+
+        Estacionamento es = new(precoInicial, precoPorHora);
+
+        // Realiza o loop do menu
+        while (exibirMenu)
+        {
+            string option = AnsiConsole.Prompt
+            (
+                new SelectionPrompt<String>()
+                    .Title("\nSelecione uma opção:")
+                    .AddChoices
+                    (
+                        "Cadastrar Veículo",
+                        "Listar Veículo",
+                        "Remover Veículo",
+                        "Encerrar"
+                    )
+            );
+
             exibirMenu = false;
-            break;
+            exibirRelogio = false;
 
-        default:
-            Console.WriteLine("Opção inválida");
-            break;
+            AnsiConsole.Clear();
+
+            switch (option)
+            {
+                case "Cadastrar Veículo":
+                    string placa = AnsiConsole.Ask<String>("Digite a placa do veículo");
+                    es.AdicionarVeiculo(placa);
+                    break;
+                case "Remover Veículo":
+                    es.RemoverVeiculo();
+                    break;
+                case "Listar Veículo":
+                    es.ListarVeiculos();
+                    break;
+                case "Encerrar":
+                    exibirMenu = false;
+                    exibirRelogio = false;
+                    AnsiConsole.WriteLine("O programa se encerrou");
+                    Environment.Exit(0);
+                    break;
+                default:
+                    AnsiConsole.Markup("Como Você Consegui entrar aqui?");
+                    break;
+            }
+            AnsiConsole.MarkupLine("\nPressione qualquer tecla para Voltar");
+            Console.ReadKey();
+            AnsiConsole.Clear();
+
+            exibirRelogio = true;
+            exibirMenu = true;
+        }
+
     }
 
-    Console.WriteLine("Pressione uma tecla para continuar");
-    Console.ReadLine();
+    /// <summary>
+    /// Função para exibir o relógio
+    /// </summary>
+    private static void ShowTime()
+    {
+        while (true)
+        {
+            string Time = $"[bold]Hora Atual: {DateTime.Now:HH:mm:ss}[/]";
+            if (exibirRelogio is true)
+            {
+                AnsiConsole.Markup(Time);
+            }
+        }
+    }
 }
-
-Console.WriteLine("O programa se encerrou");
